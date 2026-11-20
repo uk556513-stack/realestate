@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import AOS from "aos";
 import gsap from "gsap";
@@ -41,6 +40,10 @@ import aboutImage from "./assets/about.jpg";
 import avatar from "./assets/avatar.jpg";
 
 gsap.registerPlugin(ScrollTrigger);
+
+/* =========================================
+   PROPERTY DATA
+========================================= */
 
 const properties = [
   {
@@ -117,6 +120,81 @@ const properties = [
   },
 ];
 
+/* =========================================
+   COUNT UP COMPONENT
+========================================= */
+
+function CountUp({ value, suffix = "", duration = 2000 }) {
+  const [count, setCount] = useState(0);
+  const countRef = useRef(null);
+
+  useEffect(() => {
+    let animationFrame;
+    let observer;
+    let hasStarted = false;
+
+    const startAnimation = () => {
+      if (hasStarted) return;
+      hasStarted = true;
+
+      let startTime = null;
+
+      const animate = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+
+        const progress = Math.min(
+          (timestamp - startTime) / duration,
+          1
+        );
+
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+
+        setCount(Math.floor(value * easedProgress));
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate);
+        } else {
+          setCount(value);
+        }
+      };
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startAnimation();
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.3,
+      }
+    );
+
+    if (countRef.current) {
+      observer.observe(countRef.current);
+    }
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      observer?.disconnect();
+    };
+  }, [value, duration]);
+
+  return (
+    <h3 ref={countRef}>
+      {count.toLocaleString("en-IN")}
+      <span>{suffix}</span>
+    </h3>
+  );
+}
+
+/* =========================================
+   MAIN APP
+========================================= */
+
 function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -135,7 +213,9 @@ function App() {
 
   const heroRef = useRef(null);
 
-  // AOS INITIALIZATION
+  /* =========================================
+     AOS INITIALIZATION
+  ========================================= */
 
   useEffect(() => {
     AOS.init({
@@ -146,7 +226,9 @@ function App() {
     });
   }, []);
 
-  // HERO GSAP INTRO
+  /* =========================================
+     HERO GSAP INTRO
+  ========================================= */
 
   useEffect(() => {
     if (loggedIn && heroRef.current) {
@@ -163,7 +245,9 @@ function App() {
     }
   }, [loggedIn]);
 
-  // ADVANCED ANIMATIONS
+  /* =========================================
+     ADVANCED ANIMATIONS
+  ========================================= */
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -215,7 +299,7 @@ function App() {
           "-=0.3"
         );
 
-      // HERO GLOW MOVEMENT
+      /* HERO GLOW MOVEMENT */
 
       gsap.to(".hero-glow-one", {
         x: 80,
@@ -237,7 +321,7 @@ function App() {
         ease: "sine.inOut",
       });
 
-      // ABOUT FLOATING CARD
+      /* ABOUT FLOATING CARD */
 
       gsap.to(".about-floating-card", {
         y: -14,
@@ -247,7 +331,7 @@ function App() {
         ease: "sine.inOut",
       });
 
-      // ABOUT DECORATION ROTATION
+      /* ABOUT DECORATION ROTATION */
 
       gsap.to(".about-image-decoration", {
         rotation: 360,
@@ -256,7 +340,7 @@ function App() {
         ease: "none",
       });
 
-      // TESTIMONIAL LIGHT
+      /* TESTIMONIAL LIGHT */
 
       gsap.to(".testimonial-glow", {
         x: 100,
@@ -267,7 +351,7 @@ function App() {
         ease: "sine.inOut",
       });
 
-      // FOOTER LIGHT
+      /* FOOTER LIGHT */
 
       gsap.to(".realty-footer::before", {
         x: 100,
@@ -277,11 +361,13 @@ function App() {
       });
     }, ".realty-website");
 
-    // DESKTOP DETECTION
+    /* DESKTOP DETECTION */
 
-    const isDesktop = window.matchMedia("(min-width: 992px)").matches;
+    const isDesktop = window.matchMedia(
+      "(min-width: 992px)"
+    ).matches;
 
-    // 3D CARD TILT
+    /* 3D CARD TILT */
 
     const tiltElements = document.querySelectorAll(
       ".property-card, .service-card, .contact-form-card"
@@ -331,7 +417,7 @@ function App() {
       });
     }
 
-    // HERO MOUSE PARALLAX
+    /* HERO MOUSE PARALLAX */
 
     const hero = document.querySelector(".hero-section");
     const heroBg = document.querySelector(".hero-bg");
@@ -368,7 +454,7 @@ function App() {
       hero.addEventListener("mousemove", handleHeroMouse);
     }
 
-    // FLOATING TOP BUTTON
+    /* FLOATING TOP BUTTON */
 
     const floatingTop = document.querySelector(".floating-top");
 
@@ -399,7 +485,9 @@ function App() {
     };
   }, [loggedIn]);
 
-  // LOGIN
+  /* =========================================
+     LOGIN
+  ========================================= */
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -418,7 +506,9 @@ function App() {
     setLoggedIn(true);
   };
 
-  // FAVORITES
+  /* =========================================
+     FAVORITES
+  ========================================= */
 
   const toggleFavorite = (id) => {
     setFavorites((prev) =>
@@ -428,7 +518,9 @@ function App() {
     );
   };
 
-  // PROPERTY FILTER
+  /* =========================================
+     PROPERTY FILTER
+  ========================================= */
 
   const filteredProperties = properties.filter((property) => {
     const matchesType =
@@ -446,7 +538,8 @@ function App() {
     if (priceText.includes("Cr")) {
       priceInCr = parseFloat(priceText.replace("Cr", ""));
     } else if (priceText.includes("L")) {
-      priceInCr = parseFloat(priceText.replace("L", "")) / 100;
+      priceInCr =
+        parseFloat(priceText.replace("L", "")) / 100;
     }
 
     const matchesBudget =
@@ -468,7 +561,9 @@ function App() {
     );
   });
 
-  // SEARCH
+  /* =========================================
+     SEARCH
+  ========================================= */
 
   const handleSearch = () => {
     setShowFavorites(false);
@@ -479,7 +574,9 @@ function App() {
     });
   };
 
-  // RESET FILTERS
+  /* =========================================
+     RESET FILTERS
+  ========================================= */
 
   const resetFilters = () => {
     setLocation("");
@@ -489,7 +586,9 @@ function App() {
     setShowFavorites(false);
   };
 
-  // FAVORITE NAVIGATION
+  /* =========================================
+     FAVORITE NAVIGATION
+  ========================================= */
 
   const handleFavoriteNav = () => {
     setShowFavorites((prev) => !prev);
@@ -504,13 +603,17 @@ function App() {
     }, 100);
   };
 
-  // LOGIN SCREEN
+  /* =========================================
+     LOGIN SCREEN
+  ========================================= */
 
   if (!loggedIn) {
     return (
       <div
         className="login-page"
-        style={{ backgroundImage: `url(${loginBg})` }}
+        style={{
+          backgroundImage: `url(${loginBg})`,
+        }}
       >
         <div className="login-overlay"></div>
 
@@ -640,7 +743,9 @@ function App() {
               </div>
 
               {loginError && (
-                <div className="login-error">{loginError}</div>
+                <div className="login-error">
+                  {loginError}
+                </div>
               )}
 
               <button type="submit" className="login-submit">
@@ -663,8 +768,13 @@ function App() {
     );
   }
 
+  /* =========================================
+     MAIN WEBSITE
+  ========================================= */
+
   return (
     <div className="realty-website">
+
       {/* NAVBAR */}
 
       <nav className="realty-navbar">
@@ -736,7 +846,9 @@ function App() {
       <section className="hero-section" id="home" ref={heroRef}>
         <div
           className="hero-bg"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{
+            backgroundImage: `url(${heroImage})`,
+          }}
         ></div>
 
         <div className="hero-dark-overlay"></div>
@@ -853,37 +965,54 @@ function App() {
         </div>
       </section>
 
-      {/* STATS */}
+      {/* STATS - COUNT UP */}
 
       <section className="stats-section">
         <div className="container">
           <div className="stats-grid">
+
             <div className="stat-item" data-aos="fade-up">
-              <h3>2,500<span>+</span></h3>
+              <CountUp value={2500} suffix="+" />
               <p>Successful Property Deals</p>
             </div>
 
-            <div className="stat-item" data-aos="fade-up" data-aos-delay="100">
-              <h3>15<span>+</span></h3>
+            <div
+              className="stat-item"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
+              <CountUp value={15} suffix="+" />
               <p>Years of Market Expertise</p>
             </div>
 
-            <div className="stat-item" data-aos="fade-up" data-aos-delay="200">
-              <h3>98<span>%</span></h3>
+            <div
+              className="stat-item"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              <CountUp value={98} suffix="%" />
               <p>Client Satisfaction Rate</p>
             </div>
 
-            <div className="stat-item" data-aos="fade-up" data-aos-delay="300">
-              <h3>45<span>+</span></h3>
+            <div
+              className="stat-item"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
+              <CountUp value={45} suffix="+" />
               <p>Professional Property Advisors</p>
             </div>
+
           </div>
         </div>
       </section>
 
       {/* PROPERTIES */}
 
-      <section className="properties-section section-padding" id="properties">
+      <section
+        className="properties-section section-padding"
+        id="properties"
+      >
         <div className="container">
           <div className="section-top" data-aos="fade-up">
             <div>
@@ -914,27 +1043,29 @@ function App() {
           </div>
 
           <div className="property-filter-row" data-aos="fade-up">
-            {["All", "Villa", "Apartment", "Commercial"].map((type) => (
-              <button
-                key={type}
-                className={`filter-btn ${
-                  filterType === type ? "filter-active" : ""
-                }`}
-                onClick={() => {
-                  setFilterType(type);
-                  setSearchText("");
-                  setShowFavorites(false);
-                }}
-              >
-                {type === "All"
-                  ? "All Properties"
-                  : type === "Villa"
-                  ? "Luxury Villas"
-                  : type === "Apartment"
-                  ? "Apartments"
-                  : "Commercial"}
-              </button>
-            ))}
+            {["All", "Villa", "Apartment", "Commercial"].map(
+              (type) => (
+                <button
+                  key={type}
+                  className={`filter-btn ${
+                    filterType === type ? "filter-active" : ""
+                  }`}
+                  onClick={() => {
+                    setFilterType(type);
+                    setSearchText("");
+                    setShowFavorites(false);
+                  }}
+                >
+                  {type === "All"
+                    ? "All Properties"
+                    : type === "Villa"
+                    ? "Luxury Villas"
+                    : type === "Apartment"
+                    ? "Apartments"
+                    : "Commercial"}
+                </button>
+              )
+            )}
           </div>
 
           <div className="property-grid">
@@ -1013,7 +1144,10 @@ function App() {
 
                   <div className="property-bottom">
                     <div>
-                      <span className="price-label">OFFERING PRICE</span>
+                      <span className="price-label">
+                        OFFERING PRICE
+                      </span>
+
                       <h4>{property.price}</h4>
                     </div>
 
@@ -1138,7 +1272,10 @@ function App() {
 
       {/* SERVICES */}
 
-      <section className="services-section section-padding" id="services">
+      <section
+        className="services-section section-padding"
+        id="services"
+      >
         <div className="container">
           <div className="section-top" data-aos="fade-up">
             <div>
@@ -1176,7 +1313,11 @@ function App() {
               </a>
             </div>
 
-            <div className="service-card" data-aos="fade-up" data-aos-delay="100">
+            <div
+              className="service-card"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
               <div className="service-icon">
                 <FaKey />
               </div>
@@ -1194,7 +1335,11 @@ function App() {
               </a>
             </div>
 
-            <div className="service-card" data-aos="fade-up" data-aos-delay="200">
+            <div
+              className="service-card"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
               <div className="service-icon">
                 <FaBuilding />
               </div>
@@ -1212,7 +1357,11 @@ function App() {
               </a>
             </div>
 
-            <div className="service-card" data-aos="fade-up" data-aos-delay="300">
+            <div
+              className="service-card"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
               <div className="service-icon">
                 <FaShieldAlt />
               </div>
@@ -1272,7 +1421,10 @@ function App() {
 
       {/* CONTACT */}
 
-      <section className="contact-section section-padding" id="contact">
+      <section
+        className="contact-section section-padding"
+        id="contact"
+      >
         <div className="container">
           <div className="contact-grid">
             <div className="contact-content" data-aos="fade-right">
@@ -1339,12 +1491,15 @@ function App() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  alert("Thank you! Your enquiry has been submitted.");
+                  alert(
+                    "Thank you! Your enquiry has been submitted."
+                  );
                   e.target.reset();
                 }}
               >
                 <div className="contact-input-group">
                   <label>Full name</label>
+
                   <input
                     type="text"
                     placeholder="Enter your full name"
@@ -1354,6 +1509,7 @@ function App() {
 
                 <div className="contact-input-group">
                   <label>Email address</label>
+
                   <input
                     type="email"
                     placeholder="Enter your email address"
@@ -1363,6 +1519,7 @@ function App() {
 
                 <div className="contact-input-group">
                   <label>Contact number</label>
+
                   <input
                     type="tel"
                     placeholder="Enter your contact number"
@@ -1377,6 +1534,7 @@ function App() {
                     <option value="">
                       Choose your property interest
                     </option>
+
                     <option>Luxury Villa</option>
                     <option>Residential Apartment</option>
                     <option>Commercial Property</option>
@@ -1410,16 +1568,16 @@ function App() {
           <div className="footer-top">
             <div className="footer-brand">
               <a href="#home" className="realty-logo">
-            <span className="logo-square">
-              <FaHome />
-            </span>
-            ESTORA<span></span>
-          </a>
+                <span className="logo-square">
+                  <FaHome />
+                </span>
+                ESTORA<span></span>
+              </a>
+
               <p>
-                Find Your Dream Home.Live Your Best Life.
+                Find Your Dream Home. Live Your Best Life.
                 <br />
                 Discover exceptional homes, premium spaces and design.
-                
               </p>
             </div>
 
@@ -1470,7 +1628,9 @@ function App() {
           </div>
 
           <div className="footer-bottom">
-            <p>© 2026 ESTORA REALTY. ALL RIGHTS RESERVED.</p>
+            <p>
+              © 2026 ESTORA REALTY. ALL RIGHTS RESERVED.
+            </p>
 
             <a href="#home">
               BACK TO TOP ↑
