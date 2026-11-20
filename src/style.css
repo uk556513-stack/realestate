@@ -748,7 +748,38 @@ nav,
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
 }
+/* FIXED NAVBAR */
+.realty-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
 
+  background: rgba(16, 23, 19, 0.95);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  transition: all 0.3s ease;
+}
+
+/* NAVBAR CONTAINER */
+.realty-nav-container {
+  width: 100%;
+  min-height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* PREVENT CONTENT FROM GOING UNDER NAVBAR */
+#home {
+  scroll-margin-top: 85px;
+}
+
+section {
+  scroll-margin-top: 85px;
+}
 /* =====================================================
    4. HERO
 ===================================================== */
